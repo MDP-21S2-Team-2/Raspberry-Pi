@@ -10,12 +10,12 @@ class RaspberryPi():
 
     def __init__(self):
 
-        #Current state of robot
-        self.X = 0
-        self.Y = 0
-        self.state = 0
-        #Current angle (0, 90, 180, 270)
-        self.orient = 0
+        # #Current state of robot (Prototype)
+        # self.X = 0
+        # self.Y = 0
+        # self.state = 0
+        # #Current angle (0, 90, 180, 270)
+        # self.orient = 0
 
         #Define new interfaces
         self.android = AndroidInterface()
@@ -37,26 +37,28 @@ class RaspberryPi():
 
         return src, dst, command
 
-    def updateInfo(self, string):
-        for cmd in string:
-            if cmd == 'TL':
-                self.orient = (self.orient + 270) % 360
+    # #Prototype function
+    # def updateInfo(self, string):
+    #     for cmd in string:
+    #         if cmd == 'TL':
+    #             self.orient = (self.orient + 270) % 360
 
-            elif cmd == 'TR':
-                self.orient = (self.orient + 90) % 360
+    #         elif cmd == 'TR':
+    #             self.orient = (self.orient + 90) % 360
 
-            elif cmd[0:2] == 'MF':
-                if self.orient == 0:
-                    self.Y += min(int(cmd[2]), 20)
-                elif self.orient == 90:
-                    self.X += min(int(cmd[2]), 15)
-                elif self.orient == 180:
-                    self.Y -= max(int(cmd[2]), 0)
-                else:
-                    self.X -= max(int(cmd[2]), 0)
+    #         elif cmd[0:2] == 'MF':
+    #             if self.orient == 0:
+    #                 self.Y += min(int(cmd[2]), 20)
+    #             elif self.orient == 90:
+    #                 self.X += min(int(cmd[2]), 15)
+    #             elif self.orient == 180:
+    #                 self.Y -= max(int(cmd[2]), 0)
+    #             else:
+    #                 self.X -= max(int(cmd[2]), 0)
 
-    def getInfo(self):
-        return 'INFO,' + str(self.X) + ',' + str(self.Y) + ',' + str(self.state) + ',' + str(self.orient)
+    # #Prototype function
+    # def getInfo(self):
+    #     return 'INFO,' + str(self.X) + ',' + str(self.Y) + ',' + str(self.state) + ',' + str(self.orient)
 
     def readAndroid(self):
         if not self.android.isConnected():
@@ -72,7 +74,7 @@ class RaspberryPi():
             if src == "AN":
 
                 if dst == "AR":
-                    self.updateInfo(command)
+                    # self.updateInfo(command)
                     self.writeArduino(command)
                     self.writeAndroid("ACK")
 
@@ -139,7 +141,7 @@ class RaspberryPi():
             if src == "AL":
 
                 if dst == "AR":
-                    self.updateInfo(command)
+                    # self.updateInfo(command)
                     self.writeArduino(command)
                         
                 elif dst == "AN":
