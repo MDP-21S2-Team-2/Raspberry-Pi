@@ -50,7 +50,7 @@ class ArduinoInterface():
         try:
             encodedString = string.encode()
             self.servo.write(encodedString)
-            print ("Arduino - Sent: %s" % string)
+            print ("Arduino - Sent to Arduino: %s" % string)
 		
         except Exception as e:
             print ("Arduino - Caught error:")
@@ -63,7 +63,7 @@ class ArduinoInterface():
             string = self.servo.readline()
             decodedString = string.decode('utf-8')
             decodedString = str(decodedString)
-            print ("Arduino - Received: %s" % decodedString)
+            print ("Arduino - Received from Arduino: %s" % decodedString)
             return decodedString
 
         except Exception as e:

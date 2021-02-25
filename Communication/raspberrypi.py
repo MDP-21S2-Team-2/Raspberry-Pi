@@ -25,17 +25,18 @@ class RaspberryPi():
         print("RPi - Initialized all interfaces")
         
         #Initial connection
-        self.android.connectToAndroid()
         self.arduino.connectToArduino()
+        self.android.connectToAndroid()
         self.pc.connectToPC()
 
     def processCommand(self, string):
         tokenList = string.split("-")
-        src = tokenList[0]
-        dst = tokenList[1]
-        command = tokenList[2:]
+        if len(tokenList) >= 2:
+            dst = tokenList[0]
+            command = tokenList[1]
 
-        return src, dst, command
+            return dst, command
+        return '', ''
 
     # #Prototype function
     # def updateInfo(self, string):
@@ -68,31 +69,27 @@ class RaspberryPi():
             string = self.android.receiveFromAndroid()
             string = str(string)
 
-            #Get logic command from string
-            src, dst, command = self.processCommand(string)
-            
-            if src == "AN":
+            try:
+                tokenList = string.split("-")
+                # if len(tokenList) >= 2:
+                #     dst = tokenList[0]
+                #     command = tokenList[1]
 
-                if dst == "AR":
-                    # self.updateInfo(command)
-                    self.writeArduino(command)
-                    self.writeAndroid("ACK")
-
-                elif dst == "AL":
-                    self.writePC(command)
-                    self.writeAndroid("ACK")
-
-            else:
-                print("RPi - Error from readAndroid")
+                # return dst, command
+                if tokenList[1] == "AR":
+                    self.writeArduino(tokenList[2])
+                            
+                elif tokenList[1] == "AL":
+                    self.writePC(tokenList[2])
+                self.writeAndroid("ACK")
+            except Exception as details:
+                print('Error in readAndroid: ' + str(details))
             
             time.sleep(1)
 
     def writeAndroid(self, string=''):
         if self.android.isConnected() and string:
             self.android.sendToAndroid(string)
-            return True
-        
-        return False
 
     def readArduino(self):
         if not self.arduino.isConnected():
@@ -101,31 +98,14 @@ class RaspberryPi():
         while True:
             string = self.arduino.receiveFromArduino()
             string = str(string)
-
-            #Get logic command from string
-            src, dst, command = self.processCommand(string)
             
-            if src == "AR":
-
-                if dst == "AN":
-                    self.writeAndroid(command)
-
-                elif dst == "AL":
-                    self.writePC(command)
-                
-                self.writeArduino("ACK")
-            
-            else:
-                print("RPi - Error from readArduino")
+            self.writePC(string)
             
             time.sleep(1)
 
     def writeArduino(self, string=''):
         if self.arduino.isConnected() and string:
             self.arduino.sendToArduino(string)
-            return True
-
-        return False
 
     def readPC(self):
         if not self.pc.isConnected():
@@ -136,30 +116,22 @@ class RaspberryPi():
             string = str(string)
 
             #Get logic command from string
-            src, dst, command = self.processCommand(string)
+            dst, command = self.processCommand(string)
             
-            if src == "AL":
-
-                if dst == "AR":
-                    # self.updateInfo(command)
-                    self.writeArduino(command)
+            if dst == "AR":
+                self.writeArduino(command)
+                self.writePC("ACK")
                         
-                elif dst == "AN":
-                    self.writeAndroid(command)
+            elif dst == "AN":
+                self.writeAndroid(command)
                 
                 self.writePC("ACK")
             
-            else:
-                print("RPi - Error from readPC")
-            
-            time.sleep(1)
+            time.sleep(0.7)
 
     def writePC(self, string=''):
         if self.pc.isConnected() and string:
             self.pc.sendToPC(string)
-            return True
-        
-        return False
 
     def startProgram(self):
         #Assign threads

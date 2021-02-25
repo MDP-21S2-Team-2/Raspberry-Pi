@@ -1,6 +1,8 @@
 import io
+import time
 import socket
 import struct
+import matplotlib.pyplot as plt
 from PIL import Image
 
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
@@ -27,6 +29,10 @@ try:
         image_stream.seek(0)
         image = Image.open(image_stream)
         print('Image is %dx%d' % image.size)
+        plt.imshow(image)
+        plt.show()
+        time.sleep(1) #will make the plot window empty
+        plt.clf()
         image.verify()
         print('Image is verified')
 finally:

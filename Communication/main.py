@@ -10,7 +10,7 @@ if __name__ == "__main__":
     try:
         program.startProgram()
         while True:
-            time.sleep(1)
+            pass
     
     except KeyboardInterrupt:
         print("RPi - Ending the program")
