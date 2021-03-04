@@ -1,3 +1,4 @@
+import numpy as np
 def conf_init():
   confidence = {}
   for i in [0.1,0.2,0.3,0.4,0.5]:
@@ -12,15 +13,25 @@ def conf_init():
 def get_offset(x_dir,y_dir,idx,check):
   coef1 = [-1,0,1]
   coef2 = [-2,-1,0,1,2]
+  coef3 = [-3,-2,-1,0,1,2,3]
 
-  if (check):
+  if (check == 1):
     x_off = y_dir * coef1[idx]
     y_off = -x_dir * coef1[idx]
-  else:
+  elif (check ==2):
     x_off = y_dir * coef2[idx]
     y_off = -x_dir * coef2[idx]
+  elif (check ==3):
+    x_off = y_dir * coef3[idx]
+    y_off = -x_dir * coef3[idx]
 
   return (x_off, y_off)
+
+
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
 
 def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
 
@@ -32,14 +43,10 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
       conf = 1.0
     img_cor = (cur_x_cor + (2*x_dir), cur_y_cor + (2*y_dir))
 
-    if (x_box <= CONST_X11):
-      idx = 0
-    elif (x_box > CONST_X11 and x_box <= CONST_X21):
-      idx = 1
-    else:
-      idx = 2
+    CONST = np.array([92,269.8,447.6])
     
-    (x_off,y_off) = get_offset(x_dir,y_dir,idx,True)
+    idx = find_nearest(CONST,x_box)
+    (x_off,y_off) = get_offset(x_dir,y_dir,idx,1)
     img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
 
 
@@ -48,14 +55,17 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     conf = distance / 62.5 
     img_cor = (cur_x_cor + (3*x_dir) , cur_y_cor + (3*y_dir))
 
-    if (x_box <= CONST_X12):
-      idx = 0
-    elif (x_box > CONST_X12 and x_box <= CONST_X22):
-      idx = 1
-    else:
-      idx = 2
+    CONST = np.array([141.45,263.15,384.85])
+
+    # if (x_box <= CONST_X12):
+    #   idx = 0
+    # elif (x_box > CONST_X12 and x_box <= CONST_X22):
+    #   idx = 1
+    # else:
+    #   idx = 2
     
-    (x_off,y_off) = get_offset(x_dir,y_dir,idx,True)
+    idx = find_nearest(CONST,x_box)
+    (x_off,y_off) = get_offset(x_dir,y_dir,idx,1)
     img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
 
   elif (distance >= 126 and distance < 152.5):
@@ -63,14 +73,17 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     conf = distance / 26.5 
     img_cor = (cur_x_cor + (4*x_dir) , cur_y_cor + (4*y_dir))
 
-    if (x_box <= CONST_X13):
-      idx = 0
-    elif (x_box > CONST_X13 and x_box <= CONST_X23):
-      idx = 1
-    else:
-      idx = 2
-    
-    (x_off,y_off) = get_offset(x_dir,y_dir,idx,True)
+    CONST = np.array([69.1,163.6,258.5,352.45,446.95])
+
+    # if (x_box <= CONST_X13):
+    #   idx = 0
+    # elif (x_box > CONST_X13 and x_box <= CONST_X23):
+    #   idx = 1
+    # else:
+    #   idx = 2
+
+    idx = find_nearest(CONST,x_box)
+    (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
     img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
 
   elif (distance >= 102.5 and distance < 126):
@@ -78,18 +91,21 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     conf = distance / 23.5 
     img_cor = (cur_x_cor + (5*x_dir) , cur_y_cor + (5*y_dir))
 
-    if (x_box <= CONST_X14):
-      idx = 0
-    elif (x_box > CONST_X14 and x_box <= CONST_X24):
-      idx = 1
-    elif (x_box > CONST_X24 and x_box <= CONST_X34):
-      idx = 2
-    elif (x_box > CONST_X34 and x_box <= CONST_X44):
-      idx = 3
-    else:
-      idx = 4
-    
-    (x_off,y_off) = get_offset(x_dir,y_dir,idx,False)
+    CONST = np.array([105.95,181.95,258.25,333.1,409.1])
+
+    # if (x_box <= CONST_X14):
+    #   idx = 0
+    # elif (x_box > CONST_X14 and x_box <= CONST_X24):
+    #   idx = 1
+    # elif (x_box > CONST_X24 and x_box <= CONST_X34):
+    #   idx = 2
+    # elif (x_box > CONST_X34 and x_box <= CONST_X44):
+    #   idx = 3
+    # else:
+    #   idx = 4
+
+    idx = find_nearest(CONST,x_box)
+    (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
     img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
 
   elif (distance >= 88 and distance < 102.5):
@@ -97,16 +113,21 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     conf = distance / 14.5 
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
 
-    if (x_box <= CONST_X15):
-      idx = 0
-    elif (x_box > CONST_X15 and x_box <= CONST_X25):
-      idx = 1
-    elif (x_box > CONST_X25 and x_box <= CONST_X35):
-      idx = 2
-    elif (x_box > CONST_X35 and x_box <= CONST_X45):
-      idx = 3
-    else:
-      idx = 4
+    CONST = np.array([59.74,123.7,189.05,252.7,314.8,378.35,442.31])
+
+    # if (x_box <= CONST_X15):
+    #   idx = 0
+    # elif (x_box > CONST_X15 and x_box <= CONST_X25):
+    #   idx = 1
+    # elif (x_box > CONST_X25 and x_box <= CONST_X35):
+    #   idx = 2
+    # elif (x_box > CONST_X35 and x_box <= CONST_X45):
+    #   idx = 3
+    # else:
+    #   idx = 4
+    idx = find_nearest(CONST,x_box)
+    (x_off,y_off) = get_offset(x_dir,y_dir,idx,3)
+    img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
 
   else:
     print("Distance: " + str(distance) + ". Image too far.")
@@ -153,8 +174,3 @@ def main(box_len,img_symb,dir,x,y,x_box):
         symb_confidence[img_symb] = {conf_lookup[confidence] : img_cor}
 
   print(symb_confidence)
-
-symb_confidence = {}
-main(box_len = 260,img_symb = 6,dir = 'straight',x=5,y=3)
-
-main(box_len = 250,img_symb = 6,dir = 'straight',x=2,y=3)
