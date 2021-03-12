@@ -47,7 +47,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,1)
-    img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
+    img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
 
   elif (distance >= 152.5 and distance < 215):
@@ -66,7 +66,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,1)
-    img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
+    img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
   elif (distance >= 126 and distance < 152.5):
     distance -= 126
@@ -84,7 +84,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
 
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
-    img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
+    img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
   elif (distance >= 102.5 and distance < 126):
     distance -= 102.5
@@ -106,7 +106,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
 
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
-    img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
+    img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
   elif (distance >= 88 and distance < 102.5):
     distance -= 88
@@ -127,7 +127,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     #   idx = 4
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,3)
-    img_cor = (img_cor[0] + (x_off), img_cor[0] + (y_off))
+    img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
   else:
     print("Distance: " + str(distance) + ". Image too far.")
