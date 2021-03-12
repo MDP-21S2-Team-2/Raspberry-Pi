@@ -68,22 +68,9 @@ class RaspberryPi():
         while True:
             string = self.android.receiveFromAndroid()
             string = str(string)
-
-            try:
-                tokenList = string.split("-")
-                # if len(tokenList) >= 2:
-                #     dst = tokenList[0]
-                #     command = tokenList[1]
-
-                # return dst, command
-                if tokenList[1] == "AR":
-                    self.writeArduino(tokenList[2])
-                            
-                elif tokenList[1] == "AL":
-                    self.writePC(tokenList[2])
-                self.writeAndroid("ACK")
-            except Exception as details:
-                print('Error in readAndroid: ' + str(details))
+            
+            self.writePC(string)
+            self.writeAndroid("ACK")
             
             time.sleep(1)
 
@@ -98,6 +85,8 @@ class RaspberryPi():
         while True:
             string = self.arduino.receiveFromArduino()
             string = str(string)
+            if string == ' ' or string == '' or string == '/n' or string is None:
+                continue
             
             self.writePC(string)
             
@@ -120,7 +109,6 @@ class RaspberryPi():
             
             if dst == "AR":
                 self.writeArduino(command)
-                self.writePC("ACK")
                         
             elif dst == "AN":
                 self.writeAndroid(command)

@@ -1,11 +1,16 @@
 import time
+import sys
 
-from raspberrypi import *
+from rpiMultiprocess import *
 
 if __name__ == "__main__":
 
     print("RPi - Program is starting")
-    program = RaspberryPi()
+    if len(sys.argv) > 1:
+        imgRec = int(sys.argv[1])
+    else:
+        imgRec = 0
+    program = RaspberryPi(imgRec)
     
     try:
         program.startProgram()

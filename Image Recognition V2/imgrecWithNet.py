@@ -13,7 +13,7 @@ SERVER = '192.168.2.2'
 ADDR = (SERVER, PORT)
 
 ir_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# ir_socket.connect(ADDR)
+ir_socket.connect(ADDR)
 
 def getImageString(x_coordinate, y_coordinate, id):
     return str(x_coordinate) + ":" + str(y_coordinate) + ":" + str(id)
@@ -22,7 +22,7 @@ def sendAndroidString(resultList):
     string = "IMAGE,"
     for id in resultList:
         image = resultList[id]
-        string += getImageString(image[1][0], image[1][1], id)
+        string += getImageString(image[1][max(symb_confidence[id].keys())][0], image[1][max(symb_confidence[id].keys())][1], id)
         string += ","
     resultString = string[0:-1]
     message = resultString.encode(FORMAT)
@@ -68,7 +68,7 @@ def saveImage(frame, id):
     frame = imutils.resize(frame, width=500, height=480)
         
     # Saves images to local storage
-    cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + '.jpeg', frame)
+    cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + " try2 "+ '.jpeg', frame)
         
 def showImages(frame_list):
     for index, frame in enumerate(frame_list):
@@ -96,7 +96,8 @@ def getPosition():
     try:
         string = ir_socket.recv(1024)
         decodedString = string.decode('utf-8')
-        print ("Read from PC: %s" %(decodedString))
+        if not "ROBOT" in decodedString:
+          print ("Read from PC: %s" %(decodedString))
         direction, x_coordinate, y_coordinate = processPos(decodedString) 
 
         return direction, x_coordinate, y_coordinate
@@ -301,27 +302,28 @@ def detect():
     )
     try:
         print('Image recognition started!')
-        while True:
+        prev_dir, prev_x, prev_y = -1, -1, -1
+        direction, x_coordinate , y_coordinate = -1, -1, -1
+        while len(results) < 5:
             # cv2.waitKey(50)
-            direction, x_coordinate , y_coordinate = 0, 0, 0
-            frame = retrieveImg()
-            image, detections = imageDetection(frame, network, class_names, class_colors, THRESH)
-            
-            #structure: list
-            #element structure: (id, confidence, (bbox))
-            #bbox: x, y, w, h
-            for i in detections:
-                id = i[0]
-                confidence = i[1]
-                bbox = i[2]
-                
-                #Code for evaluating bbox area
-
-
-                print('ID detected: ' + id, ', confidence: ' + confidence)
-                print('Bounding box: x = ' + str(bbox[0]) + ' y = ' + str(bbox[1]) + ' Width = ' + str(bbox[2]) + ' Height =' + str(bbox[3]))
-                dist_est(bbox[3], id, direction, x_coordinate, y_coordinate, int(bbox[0]))
-                if id in symb_confidence:
+            direction, x_coordinate , y_coordinate = getPosition()
+            if direction != prev_dir or x_coordinate != prev_x or y_coordinate != prev_y:
+              frame = retrieveImg()
+              image, detections = imageDetection(frame, network, class_names, class_colors, THRESH)
+              
+              #structure: list
+              #element structure: (id, confidence, (bbox))
+              #bbox: x, y, w, h
+              for i in detections:
+                  id = i[0]
+                  confidence = i[1]
+                  bbox = i[2]
+                  
+                  #Code for evaluating bbox area
+                  print('ID detected: ' + id, ', confidence: ' + confidence)
+                  # print('Bounding box: Width = ' + str(bbox[2]) + ' Height =' + str(bbox[3]))
+                  dist_est(bbox[3], id, direction, x_coordinate, y_coordinate, round(float(bbox[0]), 1))
+                  if id in symb_confidence:
                     if id in results:
                         print('ID has been detected before')
                         # if float(confidence) > float(results[id][1]):
@@ -337,8 +339,8 @@ def detect():
                             results[id] = [i, symb_confidence[id]]
                             # Adds new result to dict
                             images[id] = image
-                            # saveImage(image, id)
-                            # sendAndroidString(results)
+                            saveImage(image, id)
+                            sendAndroidString(results)
                         else:
                             print('Lower confidence. Keeping existing image.')
                             pass
@@ -348,8 +350,9 @@ def detect():
                         # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
                         results[id] = [i, symb_confidence[id]]
                         images[id] = image
-                        # saveImage(image, id)
-                        # sendAndroidString(results)
+                        saveImage(image, id)
+                        sendAndroidString(results)
+              prev_dir, prev_x, prev_y = direction, x_coordinate, y_coordinate
     except KeyboardInterrupt:
         print('Image recognition ended')
     
@@ -368,8 +371,11 @@ def detect():
     result_string += '}'
     print(result_string)
 
-    # android_full_string = sendAndroidString(results)
-    # print('Sent ' + android_full_string + ' to Android.')
+    android_full_string = sendAndroidString(results)
+    print('IMG - Sent to Android:' + android_full_string)
+
+    ir_socket.send("AL-STOP")
+    ir_socket.send("AR-STOP")
 
     #generate image mosaic
     result_list = list(images.values())

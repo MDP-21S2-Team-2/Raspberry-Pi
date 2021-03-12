@@ -9,6 +9,10 @@ class AndroidInterface():
         self.clientSocket = None
         self.connection = False
 
+        self.serverSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self.serverSocket.bind(('', BT_PORT))
+        self.serverSocket.listen(3)
+
     def isConnected(self):
         return self.connection
     
@@ -17,10 +21,6 @@ class AndroidInterface():
 
     def connectToAndroid(self, uuid = UUID):
         try:
-            self.serverSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-            self.serverSocket.bind(('', BT_PORT))
-            self.serverSocket.listen(1)
-
             print("Bluetooth - Waiting for connection to RFCOMM channel %d" % BT_PORT)
 
             self.clientSocket, clientInfo = self.serverSocket.accept()
@@ -37,18 +37,20 @@ class AndroidInterface():
             self.setConnection(False)
 
             print ("Bluetooth - Closing server socket")
-            self.serverSocket.close()
+            self.disconnectFromAndroid()
+            raise e
             
     
     def disconnectFromAndroid(self):
         try:
             if self.clientSocket:
                 self.clientSocket.close()
+                self.clientSocket = None
                 print ("Bluetooth - Closing client socket")
 
-            if self.serverSocket:
-                self.serverSocket.close()
-                print ("Bluetooth - Closing server socket")
+            # if self.serverSocket:
+            #     self.serverSocket.close()
+            print ("Bluetooth - Closing server socket")
 
             self.setConnection(False)
 
@@ -57,6 +59,7 @@ class AndroidInterface():
             print(str(e))
 
             print ("Bluetooth - Disconnection failed")
+            raise e
 
     def sendToAndroid (self, string):
         try:
@@ -66,9 +69,10 @@ class AndroidInterface():
         except Exception as e:
             print("Bluetooth - Caught error:")
             print(str(e))
+            raise e
 
-            print("Bluetooth - RPi is trying to reconnect")
-            self.connectToAndroid()
+            # print("Bluetooth - RPi is trying to reconnect")
+            # self.connectToAndroid()
 
     def receiveFromAndroid (self):
         try:
@@ -80,6 +84,7 @@ class AndroidInterface():
         except Exception as e:
             print("Bluetooth - Caught error:")
             print(str(e))
+            raise e
 
-            print("Bluetooth - RPi is trying to reconnect")
-            self.connectToAndroid()
+            # print("Bluetooth - RPi is trying to reconnect")
+            # self.connectToAndroid()
