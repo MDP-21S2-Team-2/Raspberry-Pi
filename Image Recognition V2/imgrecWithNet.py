@@ -16,18 +16,20 @@ ir_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ir_socket.connect(ADDR)
 
 def getImageString(x_coordinate, y_coordinate, id):
-    return str(x_coordinate) + ":" + str(y_coordinate) + ":" + str(id)
+  return str(x_coordinate) + ":" + str(y_coordinate) + ":" + str(id)
 
 def sendAndroidString(resultList):
-    string = "IMAGE,"
-    for id in resultList:
-        image = resultList[id]
-        string += getImageString(image[1][max(symb_confidence[id].keys())][0], image[1][max(symb_confidence[id].keys())][1], id)
-        string += ","
-    resultString = string[0:-1]
-    message = resultString.encode(FORMAT)
-    ir_socket.send(message)
-    return str(resultString)
+  string = "IMAGE,"
+  
+  for id in resultList:
+    image = resultList[id]
+    string += getImageString(image[1][max(image.keys())][0], image[1][max(image.keys())][1], id)
+    string += ","
+
+  resultString = string[0:-1]
+  message = resultString.encode(FORMAT)
+  ir_socket.send(message)
+  return str(resultString)
 
 
 
@@ -43,69 +45,70 @@ YOLO_BATCH_SIZE = 4
 THRESH = 0.95
 
 def retrieveImg():
-    # Captures a frame from video stream and returns an opencv image
-    cap = cv2.VideoCapture(STREAM_URL)
-    ret, frame = cap.read()
-    return frame
+  # Captures a frame from video stream and returns an opencv image
+  cap = cv2.VideoCapture(STREAM_URL)
+  ret, frame = cap.read()
+  return frame
 
 def imageDetection(image, network, class_names, class_colors, thresh):
-    # Modified from darknet_images.py
-    width = darknet.network_width(network)
-    height = darknet.network_height(network)
-    darknet_image = darknet.make_image(width, height, 3)
+  # Modified from darknet_images.py
+  width = darknet.network_width(network)
+  height = darknet.network_height(network)
+  darknet_image = darknet.make_image(width, height, 3)
 
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image_resized = cv2.resize(image_rgb, (width, height),
-                               interpolation=cv2.INTER_LINEAR)
+  image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+  image_resized = cv2.resize(image_rgb, (width, height),
+                              interpolation=cv2.INTER_LINEAR)
 
-    darknet.copy_image_from_bytes(darknet_image, image_resized.tobytes())
-    detections = darknet.detect_image(network, class_names, darknet_image, thresh=thresh)
-    darknet.free_image(darknet_image)
-    image = darknet.draw_boxes(detections, image_resized, class_colors)
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), detections
+  darknet.copy_image_from_bytes(darknet_image, image_resized.tobytes())
+  detections = darknet.detect_image(network, class_names, darknet_image, thresh=thresh)
+  darknet.free_image(darknet_image)
+  image = darknet.draw_boxes(detections, image_resized, class_colors)
+  return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), detections
 
 def saveImage(frame, id):
-    frame = imutils.resize(frame, width=500, height=480)
+  frame = imutils.resize(frame, width=500, height=480)
         
-    # Saves images to local storage
-    cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + " try2 "+ '.jpeg', frame)
+  # Saves images to local storage
+  cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + " try2 "+ '.jpeg', frame)
         
 def showImages(frame_list):
-    for index, frame in enumerate(frame_list):
-        frame = imutils.resize(frame, width=500, height=480)
+  for index, frame in enumerate(frame_list):
+    frame = imutils.resize(frame, width=500, height=480)
         
-        cv2.imshow('Image' + str(index), frame)
+    cv2.imshow('Image' + str(index), frame)
 
-    if cv2.waitKey() & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
+  if cv2.waitKey() & 0xFF == ord('q'):
+    cv2.destroyAllWindows()
 
 #Position processing
 def processPos(string):
-    try:
-        tokenList = string.split(";")
-        stateList = tokenList[0].split(",")
-        direction = stateList[-2]
-        coorList = stateList[-1].split(":")
-        return int(direction), int(coorList[0]), int(coorList[1])
-    except Exception as e:
-        print("Caught error in processPos:")
-        print(str(e))
-        raise e
+  try:
+    tokenList = string.split(";")
+    stateList = tokenList[0].split(",")
+    direction = stateList[-2]
+    coorList = stateList[-1].split(":")
+    return int(direction), int(coorList[0]), int(coorList[1])
+
+  except Exception as e:
+    print("Caught error in processPos:")
+    print(str(e))
+    raise e
 
 def getPosition():
-    try:
-        string = ir_socket.recv(1024)
-        decodedString = string.decode('utf-8')
-        if not "ROBOT" in decodedString:
-          print ("Read from PC: %s" %(decodedString))
-        direction, x_coordinate, y_coordinate = processPos(decodedString) 
+  try:
+    string = ir_socket.recv(1024)
+    decodedString = string.decode('utf-8')
+    if not "ROBOT" in decodedString:
+      print ("Read from PC: %s" %(decodedString))
+    direction, x_coordinate, y_coordinate = processPos(decodedString) 
 
-        return direction, x_coordinate, y_coordinate
+    return direction, x_coordinate, y_coordinate
 
-    except Exception as e:
-        print("Caught error in getPosition:")
-        print(str(e))
-        raise e
+  except Exception as e:
+    print("Caught error in getPosition:")
+    print(str(e))
+    raise e
 
 
 #Distance estimation
@@ -292,94 +295,92 @@ def dist_est(box_len,img_symb,dir,x,y,x_box):
 
 
 def detect():
-    results = {}
-    images = {}
-    network, class_names, class_colors = darknet.load_network(
+  results = {}
+  images = {}
+  network, class_names, class_colors = darknet.load_network(
         CONFIG_FILE_PATH,
         DATA_FILE_PATH,
         WEIGHT_FILE_PATH,
         YOLO_BATCH_SIZE
-    )
-    try:
-        print('Image recognition started!')
-        prev_dir, prev_x, prev_y = -1, -1, -1
-        direction, x_coordinate , y_coordinate = -1, -1, -1
-        while len(results) < 5:
-            # cv2.waitKey(50)
-            direction, x_coordinate , y_coordinate = getPosition()
-            if direction != prev_dir or x_coordinate != prev_x or y_coordinate != prev_y:
-              frame = retrieveImg()
-              image, detections = imageDetection(frame, network, class_names, class_colors, THRESH)
-              
-              #structure: list
-              #element structure: (id, confidence, (bbox))
-              #bbox: x, y, w, h
-              for i in detections:
-                  id = i[0]
-                  confidence = i[1]
-                  bbox = i[2]
+  )
+  try:
+    print('Image recognition started!')
+    prev_dir, prev_x, prev_y = -1, -1, -1
+    direction, x_coordinate , y_coordinate = -1, -1, -1
+    while len(results) < 5:
+      direction, x_coordinate , y_coordinate = getPosition()
+      if direction != prev_dir or x_coordinate != prev_x or y_coordinate != prev_y:
+        frame = retrieveImg()
+        image, detections = imageDetection(frame, network, class_names, class_colors, THRESH)
+        #structure: list
+        #element structure: (id, confidence, (bbox))
+        #bbox: x, y, w, h
+        for i in detections:
+          id = i[0]
+          confidence = i[1]
+          bbox = i[2]
                   
-                  #Code for evaluating bbox area
-                  print('ID detected: ' + id, ', confidence: ' + confidence)
-                  # print('Bounding box: Width = ' + str(bbox[2]) + ' Height =' + str(bbox[3]))
-                  dist_est(bbox[3], id, direction, x_coordinate, y_coordinate, round(float(bbox[0]), 1))
-                  if id in symb_confidence:
-                    if id in results:
-                        print('ID has been detected before')
-                        # if float(confidence) > float(results[id][1]):
-                        if float(confidence) > float(results[id][0][1]) and max(symb_confidence[id].keys()) >= max(results[id][1].keys()):
-                            print('Higher confidence. Replacing existing image.')
-                            # Removes existing result from dict
-                            del results[id]
-                            # Removes existing img from dict
-                            del images[id]
-                            # Adds new result to dict
-                            # results[id] = i
-                            # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
-                            results[id] = [i, symb_confidence[id]]
-                            # Adds new result to dict
-                            images[id] = image
-                            saveImage(image, id)
-                            sendAndroidString(results)
-                        else:
-                            print('Lower confidence. Keeping existing image.')
-                            pass
-                    else:
-                        print('New ID. Saving to results and images dict.')
-                        # results[id] = i
-                        # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
-                        results[id] = [i, symb_confidence[id]]
-                        images[id] = image
-                        saveImage(image, id)
-                        sendAndroidString(results)
-              prev_dir, prev_x, prev_y = direction, x_coordinate, y_coordinate
-    except KeyboardInterrupt:
+          print('ID detected: ' + id, ', confidence: ' + confidence)
+          #Code for evaluating bbox area
+          # print('Bounding box: Width = ' + str(bbox[2]) + ' Height =' + str(bbox[3]))
+          dist_est(bbox[3], id, direction, x_coordinate, y_coordinate, round(float(bbox[0]), 1))
+          if id in symb_confidence:
+            if id in results:
+              print('ID has been detected before')
+              # if float(confidence) > float(results[id][1]):
+              if float(confidence) > float(results[id][0][1]) and max(symb_confidence[id].keys()) >= max(results[id][1].keys()):
+                print('Higher confidence. Replacing existing image.')
+                # Removes existing result from dict
+                del results[id]
+                # Removes existing img from dict
+                del images[id]
+                # Adds new result to dict
+                # results[id] = i
+                # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
+                results[id] = [i, symb_confidence[id]]
+                # Adds new result to dict
+                images[id] = image
+                saveImage(image, id)
+                sendAndroidString(results)
+              else:
+                print('Lower confidence. Keeping existing image.')
+                pass
+          else:
+            print('New ID. Saving to results and images dict.')
+            # results[id] = i
+            # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
+            results[id] = [i, symb_confidence[id]]
+            images[id] = image
+            saveImage(image, id)
+            sendAndroidString(results)
+      prev_dir, prev_x, prev_y = direction, x_coordinate, y_coordinate
+  except KeyboardInterrupt:
         print('Image recognition ended')
     
-    result_string = '{'
-    print("Results:")
+  result_string = '{'
+  print("Results:")
     
-    for id in results:
-        x_coordinate , y_coordinate = results[id][1][max(symb_confidence[id].keys())][0], results[id][1][max(symb_confidence[id].keys())][1]
-        id_coordinate_str = '(' + id + ',' + str(x_coordinate) + ',' + str(y_coordinate) + '),'
-        result_string += id_coordinate_str
+  for id in results:
+    image = results[id]
+    x_coordinate , y_coordinate = image[1][max(image.keys())][0], image[1][max(image.keys())][1]
+    id_coordinate_str = '(' + id + ',' + str(x_coordinate) + ',' + str(y_coordinate) + '),'
+    result_string += id_coordinate_str
 
-        print('ID: ' + id + ', Coordinates: (' + str(x_coordinate) +',' + str(y_coordinate) + ')' + ', Confidence: ' + results[id][1])
+    print('ID: ' + id + ', Coordinates: (' + str(x_coordinate) +',' + str(y_coordinate) + ')' + ', Confidence: ' + image[1])
 
-    if result_string[-1] == ',':
-        result_string = result_string[:-1]
-    result_string += '}'
-    print(result_string)
+  if result_string[-1] == ',':
+    result_string = result_string[:-1]
+  result_string += '}'
+  print(result_string)
 
-    android_full_string = sendAndroidString(results)
-    print('IMG - Sent to Android:' + android_full_string)
+  android_full_string = sendAndroidString(results)
+  print('IMG - Sent to Android:' + android_full_string)
 
-    ir_socket.send("AL-STOP")
-    ir_socket.send("AR-STOP")
+  ir_socket.send("AL-STOP")
+  ir_socket.send("AR-STOP")
 
-    #generate image mosaic
-    result_list = list(images.values())
-    showImages(result_list)
+  result_list = list(images.values())
+  showImages(result_list)
 
 if __name__ == "__main__":
-    detect()
+  detect()
