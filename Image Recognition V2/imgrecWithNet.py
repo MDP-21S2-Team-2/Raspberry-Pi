@@ -23,7 +23,7 @@ def sendAndroidString(resultList):
   
   for id in resultList:
     image = resultList[id]
-    string += getImageString(image[1][max(image.keys())][0], image[1][max(image.keys())][1], id)
+    string += getImageString(image[1][max(image[1].keys())][0], image[1][max(image[1].keys())][1], id)
     string += ","
 
   resultString = string[0:-1]
@@ -48,6 +48,7 @@ def retrieveImg():
   # Captures a frame from video stream and returns an opencv image
   cap = cv2.VideoCapture(STREAM_URL)
   ret, frame = cap.read()
+  # resizedFrame = cv2.resize(frame, (1920, 1080))
   return frame
 
 def imageDetection(image, network, class_names, class_colors, thresh):
@@ -67,14 +68,14 @@ def imageDetection(image, network, class_names, class_colors, thresh):
   return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), detections
 
 def saveImage(frame, id):
-  frame = imutils.resize(frame, width=500, height=480)
+  frame = imutils.resize(frame, width=640, height=480)
         
   # Saves images to local storage
   cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + " try2 "+ '.jpeg', frame)
         
 def showImages(frame_list):
   for index, frame in enumerate(frame_list):
-    frame = imutils.resize(frame, width=500, height=480)
+    frame = imutils.resize(frame, width=640, height=480)
         
     cv2.imshow('Image' + str(index), frame)
 
@@ -121,6 +122,7 @@ def conf_init():
     confidence[1.0-(i)]= i * 2
   confidence[0.0] = 0.1
   confidence[1.0] = 1.0
+  confidence[0.01] = 0.0
   confidence = dict(sorted(confidence.items()))
 
   return confidence
@@ -140,8 +142,6 @@ def get_offset(x_dir,y_dir,idx,check):
     x_off = y_dir * coef3[idx]
     y_off = -x_dir * coef3[idx]
 
-  print("x_off: " + str(x_off))
-  print("y_off: " + str(y_off))
   return (x_off, y_off)
 
 
@@ -151,12 +151,10 @@ def find_nearest(array, value):
     return idx
 
 def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
-  print("Cur_x_cor: " + str(cur_x_cor))
-  print("Cur_y_cor: " + str(cur_y_cor))
-
-  if (distance >= 215 ):
-    distance -= 215
-    conf = distance / 155 
+  if (distance >= 95.5 ):
+    distance -= 95.5
+    conf = distance / 68.8
+    conf = round(conf,1)
     if (conf > 0.5):
       conf = 1.0
     img_cor = (cur_x_cor + (2*x_dir), cur_y_cor + (2*y_dir))
@@ -168,88 +166,57 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
 
-  elif (distance >= 152.5 and distance < 215):
-    distance -= 152.5
-    conf = distance / 62.5 
+  elif (distance >= 67.7 and distance < 95.5):
+    distance -= 67.7
+    conf = distance / 27.8 
+    conf = round(conf,1)
     img_cor = (cur_x_cor + (3*x_dir) , cur_y_cor + (3*y_dir))
 
     CONST = np.array([141.45,263.15,384.85])
-
-    # if (x_box <= CONST_X12):
-    #   idx = 0
-    # elif (x_box > CONST_X12 and x_box <= CONST_X22):
-    #   idx = 1
-    # else:
-    #   idx = 2
     
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,1)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
-  elif (distance >= 126 and distance < 152.5):
-    distance -= 126
-    conf = distance / 26.5 
+  elif (distance >= 56 and distance < 67.7):
+    distance -= 56
+    conf = distance / 11.7 
+    conf = round(conf,1)
     img_cor = (cur_x_cor + (4*x_dir) , cur_y_cor + (4*y_dir))
 
     CONST = np.array([69.1,163.6,258.5,352.45,446.95])
 
-    # if (x_box <= CONST_X13):
-    #   idx = 0
-    # elif (x_box > CONST_X13 and x_box <= CONST_X23):
-    #   idx = 1
-    # else:
-    #   idx = 2
-
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
-  elif (distance >= 102.5 and distance < 126):
-    distance -= 102.5
-    conf = distance / 23.5 
+  elif (distance >= 45.5 and distance < 56):
+    distance -= 45.5
+    conf = distance / 10.5 
+    conf = round(conf,1)
     img_cor = (cur_x_cor + (5*x_dir) , cur_y_cor + (5*y_dir))
 
     CONST = np.array([105.95,181.95,258.25,333.1,409.1])
 
-    # if (x_box <= CONST_X14):
-    #   idx = 0
-    # elif (x_box > CONST_X14 and x_box <= CONST_X24):
-    #   idx = 1
-    # elif (x_box > CONST_X24 and x_box <= CONST_X34):
-    #   idx = 2
-    # elif (x_box > CONST_X34 and x_box <= CONST_X44):
-    #   idx = 3
-    # else:
-    #   idx = 4
-
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
-  elif (distance >= 88 and distance < 102.5):
-    distance -= 88
-    conf = distance / 14.5 
+  elif (distance >= 39 and distance < 45.5):
+    distance -= 39
+    conf = distance / 6.5 
+    conf = round(conf,1)
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
 
     CONST = np.array([59.74,123.7,189.05,252.7,314.8,378.35,442.31])
 
-    # if (x_box <= CONST_X15):
-    #   idx = 0
-    # elif (x_box > CONST_X15 and x_box <= CONST_X25):
-    #   idx = 1
-    # elif (x_box > CONST_X25 and x_box <= CONST_X35):
-    #   idx = 2
-    # elif (x_box > CONST_X35 and x_box <= CONST_X45):
-    #   idx = 3
-    # else:
-    #   idx = 4
     idx = find_nearest(CONST,x_box)
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,3)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
   else:
     print("Distance: " + str(distance) + ". Image too far.")
-    conf = 0.1234567
+    conf = 0.01
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
 
   if (img_cor[0]<0):
@@ -278,18 +245,23 @@ def dist_est(box_len,img_symb,dir,x,y,x_box):
 
   print("Image Coordinates: ",img_cor)
 
-
   conf_lookup = conf_init()
 
-  confidence = round(conf,1)
-  if (conf != 0.1234567):
-    try:
-      for key in symb_confidence[img_symb]:
-        alr_conf = key
-      if (alr_conf<confidence):
-        symb_confidence[img_symb] = {conf_lookup[confidence] : img_cor}
-    except:
-        symb_confidence[img_symb] = {conf_lookup[confidence] : img_cor}
+  # if (conf != 0.1234567):
+  try:
+    for key in symb_confidence[img_symb]:
+      alr_conf = key
+      # print(key)
+    if (alr_conf<conf_lookup[conf]):
+      symb_confidence[img_symb] = {conf_lookup[conf] : img_cor}
+      # print("First ")
+      # print(symb_confidence)
+    else:
+      print("High Confidence value not replaced")
+  except:
+      symb_confidence[img_symb] = {conf_lookup[conf] : img_cor}
+      # print("Second ")
+      # print(symb_confidence)
 
   print(symb_confidence)
 
@@ -307,7 +279,7 @@ def detect():
     print('Image recognition started!')
     prev_dir, prev_x, prev_y = -1, -1, -1
     direction, x_coordinate , y_coordinate = -1, -1, -1
-    while len(results) < 5:
+    while True:
       direction, x_coordinate , y_coordinate = getPosition()
       if direction != prev_dir or x_coordinate != prev_x or y_coordinate != prev_y:
         frame = retrieveImg()
@@ -319,7 +291,11 @@ def detect():
           id = i[0]
           confidence = i[1]
           bbox = i[2]
-                  
+
+          #Prototype: Skip side images using condition on width / height ratio
+          if float(bbox[2]) / float(bbox[3]) <= 1.0 / 4.0:
+            continue                  
+
           print('ID detected: ' + id, ', confidence: ' + confidence)
           #Code for evaluating bbox area
           # print('Bounding box: Width = ' + str(bbox[2]) + ' Height =' + str(bbox[3]))
@@ -345,15 +321,16 @@ def detect():
               else:
                 print('Lower confidence. Keeping existing image.')
                 pass
-          else:
-            print('New ID. Saving to results and images dict.')
-            # results[id] = i
-            # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
-            results[id] = [i, symb_confidence[id]]
-            images[id] = image
-            saveImage(image, id)
-            sendAndroidString(results)
+            else:
+              print('New ID. Saving to results and images dict.')
+              # results[id] = i
+              # results[id] = [i, symb_confidence[id][max(symb_confidence[id].keys())]]
+              results[id] = [i, symb_confidence[id]]
+              images[id] = image
+              saveImage(image, id)
+              sendAndroidString(results)
       prev_dir, prev_x, prev_y = direction, x_coordinate, y_coordinate
+      # print(results)
   except KeyboardInterrupt:
         print('Image recognition ended')
     
@@ -362,11 +339,11 @@ def detect():
     
   for id in results:
     image = results[id]
-    x_coordinate , y_coordinate = image[1][max(image.keys())][0], image[1][max(image.keys())][1]
+    x_coordinate , y_coordinate = image[1][max(image[1].keys())][0], image[1][max(image[1].keys())][1]
     id_coordinate_str = '(' + id + ',' + str(x_coordinate) + ',' + str(y_coordinate) + '),'
     result_string += id_coordinate_str
 
-    print('ID: ' + id + ', Coordinates: (' + str(x_coordinate) +',' + str(y_coordinate) + ')' + ', Confidence: ' + image[1])
+    print('ID: ' + id + ', Coordinates: (' + str(x_coordinate) +',' + str(y_coordinate) + ')' + ', Confidence: ' + str(image[0][1]))
 
   if result_string[-1] == ',':
     result_string = result_string[:-1]
@@ -376,8 +353,8 @@ def detect():
   android_full_string = sendAndroidString(results)
   print('IMG - Sent to Android:' + android_full_string)
 
-  ir_socket.send("AL-STOP")
-  ir_socket.send("AR-STOP")
+  ir_socket.send("AL-STOP".encode(FORMAT))
+  ir_socket.send("AR-STOP".encode(FORMAT))
 
   result_list = list(images.values())
   showImages(result_list)
