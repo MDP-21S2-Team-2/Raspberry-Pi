@@ -1,4 +1,17 @@
 import numpy as np
+import cv2
+import numpy as np
+import os
+
+def img_stitch(path):
+  imgs = []
+  for i in os.listdir(path):
+    img = cv2.imread(path + i)
+    print(img)
+    imgs.append(img)
+  im_f = cv2.hconcat([imgs[0], imgs[1], imgs[2], imgs[3], imgs[4]])
+  cv2.imwrite(path + 'fin.jpg', im_f)
+  
 def conf_init():
   confidence = {}
   for i in [0.1,0.2,0.3,0.4,0.5]:
