@@ -5,6 +5,7 @@ def conf_init():
     confidence[i]= i * 2
     confidence[1.0-(i)]= i * 2
   confidence[0.0] = 0.1
+  confidence[4.5] = 0.9
   confidence[1.0] = 1.0
   confidence[0.01] = 0.0
   confidence = dict(sorted(confidence.items()))
@@ -68,6 +69,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 126
     conf = distance / 26.5 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 4.5
     img_cor = (cur_x_cor + (4*x_dir) , cur_y_cor + (4*y_dir))
 
     CONST = np.array([69.1,163.6,258.5,352.45,446.95])
@@ -80,6 +83,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 102.5
     conf = distance / 23.5 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 4.5
     img_cor = (cur_x_cor + (5*x_dir) , cur_y_cor + (5*y_dir))
 
     CONST = np.array([105.95,181.95,258.25,333.1,409.1])
@@ -92,6 +97,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 88
     conf = distance / 14.5 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 4.5
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
 
     CONST = np.array([59.74,123.7,189.05,252.7,314.8,378.35,442.31])
