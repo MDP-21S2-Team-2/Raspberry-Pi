@@ -147,7 +147,7 @@ class RaspberryPi():
                 if self.imgRec == 1 and "ROBOT" in command:
                     self.messageDeque.append(self.formatCommand('AL', 'IMG', command))
                     self.messageDeque.append(self.formatCommand('AL', target, command))
-                    time.sleep(0.2)
+                    #time.sleep(0.2)
                 else:
                     self.messageDeque.append(self.formatCommand('AL', target, command))
             except Exception as error:
@@ -161,8 +161,12 @@ class RaspberryPi():
                 string = str(string)
                 if string is None:
                     continue
-
-                self.messageDeque.append(self.formatCommand('IMG', 'AN', string))
+                
+                if 'IMAGE' in string:
+                    self.messageDeque.append(self.formatCommand('IMG', 'AN', string))
+                if 'STOP' in string:
+                    self.messageDeque.append(self.formatCommand('IMG', 'AL', string))
+                    self.messageDeque.append(self.formatCommand('IMG', 'AR', 'T'))
             except Exception as error:
                 print('Error in process readImg: ' + str(error))
                 break
@@ -198,6 +202,8 @@ class RaspberryPi():
                             self.android.sendToAndroid(command)
                         elif target == 'AL':
                             self.pc.sendToPC(command)
+                        elif target == 'AR':
+                            self.arduino.sendToArduino(command)
                             
                     else:
                         print("Invalid header: " + message)

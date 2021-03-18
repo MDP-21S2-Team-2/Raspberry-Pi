@@ -71,13 +71,17 @@ class ArduinoInterface():
             string = self.servo.read(self.servo.inWaiting())
             while len(string) < 33:
                 string += self.servo.read(1)
-            if "IR" in str(string):
-                sensor1 = struct.unpack('<f', string[3:7])[0]
-                sensor2 = struct.unpack('<f', string[8:12])[0]
-                sensor3 = struct.unpack('<f', string[13:17])[0]
-                sensor4 = struct.unpack('<f', string[18:22])[0]
-                sensor5 = struct.unpack('<f', string[23:27])[0]
-                sensor6 = struct.unpack('<f', string[28:32])[0]
+            if "G," in str(string):
+                while len(string) < 38:
+                    string += self.servo.read(1)
+                gInteger = struct.unpack('<h', string[2:4])[0]
+                sensor1, sensor2, sensor3, sensor4, sensor5, sensor6 = self.convertSensor(string, 5)
+                resultString = "G," + str(gInteger) + ",IR," + str(sensor1) + "," + str(sensor2) + "," + str(sensor3) + "," + str(sensor4) + "," + str(sensor5) + "," + str(sensor6)
+                print ("Arduino - Received from Arduino: %s" % resultString)
+                return resultString
+
+            elif "IR," in str(string):
+                sensor1, sensor2, sensor3, sensor4, sensor5, sensor6 = self.convertSensor(string, 0)
                 resultString = "IR," + str(sensor1) + "," + str(sensor2) + "," + str(sensor3) + "," + str(sensor4) + "," + str(sensor5) + "," + str(sensor6)
                 print ("Arduino - Received from Arduino: %s" % resultString)
                 return resultString
@@ -86,3 +90,14 @@ class ArduinoInterface():
             print ("Arduino - Caught error:")
             print(str(e))
             raise e
+
+    def convertSensor(self, string, offset):
+        sensor1 = struct.unpack('<f', string[(offset+3):(offset+7)])[0]
+        sensor2 = struct.unpack('<f', string[(offset+8):(offset+12)])[0]
+        sensor3 = struct.unpack('<f', string[(offset+13):(offset+17)])[0]
+        sensor4 = struct.unpack('<f', string[(offset+18):(offset+22)])[0]
+        sensor5 = struct.unpack('<f', string[(offset+23):(offset+27)])[0]
+        sensor6 = struct.unpack('<f', string[(offset+28):(offset+32)])[0]
+
+        return sensor1, sensor2, sensor3, sensor4, sensor5, sensor6
+
