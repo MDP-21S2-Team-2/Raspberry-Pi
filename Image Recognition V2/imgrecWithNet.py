@@ -10,6 +10,7 @@ import os
 
 #Setup socket for sending of string and receiving of coordinate
 import socket
+# run = True
 
 PORT = 5000
 FORMAT = 'utf-8'
@@ -81,7 +82,8 @@ def saveImage(frame, id):
   frame = imutils.resize(frame, width=640, height=480)
         
   # Saves images to local storage
-  cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + "_" + dt.now().strftime("%H-%M-%S") + '.jpeg', frame)
+  # cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + "_" + dt.now().strftime("%H-%M-%S") + '.jpeg', frame)
+  cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + '.jpeg', frame)
         
 def showImages(frame_list):
   for index, frame in enumerate(frame_list):
@@ -89,6 +91,28 @@ def showImages(frame_list):
         
     cv2.imshow('Image' + str(index), frame)
 
+  if cv2.waitKey() & 0xFF == ord('q'):
+    cv2.destroyAllWindows()
+
+def showFinalImage(path):
+  imgs = []
+  for i in os.listdir(path):
+    img = cv2.imread(path + i)
+    # print(img)
+    imgs.append(img)
+  if len(imgs) == 5:
+    im_f = cv2.hconcat([imgs[0], imgs[1], imgs[2], imgs[3], imgs[4]])
+  elif len(imgs) == 4:
+    im_f = cv2.hconcat([imgs[0], imgs[1], imgs[2], imgs[3]])
+  elif len(imgs) == 3:
+    im_f = cv2.hconcat([imgs[0], imgs[1], imgs[2]])
+  elif len(imgs) == 2:
+    im_f = cv2.hconcat([imgs[0], imgs[1]])
+  elif len(imgs) == 1:
+    im_f = cv2.hconcat([imgs[0]])
+  cv2.imwrite(path + 'fin.jpg', im_f)
+  im_f = imutils.resize(im_f, width=1440, height=1080)
+  cv2.imshow('FinalImage', im_f)
   if cv2.waitKey() & 0xFF == ord('q'):
     cv2.destroyAllWindows()
 
@@ -108,10 +132,14 @@ def processPos(string):
 
 def getPosition():
   try:
+    global confidenceBool
     string = ir_socket.recv(1024)
     decodedString = string.decode('utf-8')
     if not "ROBOT" in decodedString:
       print ("Read from PC: %s" %(decodedString))
+    if "DONE" in decodedString:
+      confidenceBool = False
+      return -1, -1, -1
     direction, x_coordinate, y_coordinate = processPos(decodedString) 
 
     return direction, x_coordinate, y_coordinate
@@ -121,9 +149,19 @@ def getPosition():
     print(str(e))
     raise e
 
+# def getMessage():
+#   try:
+#     string = ir_socket.recv(1024)
+#     decodedString = string.decode('utf-8')
+#     return decodedString
+#   except Exception as e:
+#     print("Caught error in getPosition:")
+#     print(str(e))
+#     raise e
 
 #Distance estimation
 symb_confidence = {}
+confidenceBool = True
 
 def conf_init():
   confidence = {}
@@ -131,7 +169,7 @@ def conf_init():
     confidence[i]= i * 2
     confidence[1.0-(i)]= i * 2
   confidence[0.0] = 0.1
-  confidence[4.5] = 0.9
+  confidence[0.45] = 0.9
   confidence[1.0] = 1.0
   confidence[0.01] = 0.0
   confidence = dict(sorted(confidence.items()))
@@ -181,6 +219,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 67.7
     conf = distance / 27.8 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 0.45
     img_cor = (cur_x_cor + (3*x_dir) , cur_y_cor + (3*y_dir))
 
     CONST = np.array([141.45,263.15,384.85])
@@ -194,7 +234,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     conf = distance / 11.7 
     conf = round(conf,1)
     if conf==0.5:
-      conf = 4.5
+      conf = 0.45
     img_cor = (cur_x_cor + (4*x_dir) , cur_y_cor + (4*y_dir))
 
     CONST = np.array([69.1,163.6,258.5,352.45,446.95])
@@ -207,6 +247,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 45.5
     conf = distance / 10.5 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 0.45
     img_cor = (cur_x_cor + (5*x_dir) , cur_y_cor + (5*y_dir))
 
     CONST = np.array([105.95,181.95,258.25,333.1,409.1])
@@ -220,7 +262,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     conf = distance / 6.5 
     conf = round(conf,1)
     if conf==0.5:
-      conf = 4.5
+      conf = 0.45
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
 
     CONST = np.array([59.74,123.7,189.05,252.7,314.8,378.35,442.31])
@@ -280,14 +322,12 @@ def dist_est(box_len,img_symb,dir,x,y,x_box):
 
   print(symb_confidence)
 
-def img_stitch(path):
-  imgs = []
-  for i in os.listdir(path):
-    img = cv2.imread(path + i)
-    # print(img)
-    imgs.append(img)
-  im_f = cv2.hconcat([imgs[0], imgs[1], imgs[2], imgs[3], imgs[4]])
-  cv2.imwrite(path + 'fin.jpg', im_f)
+def checkConfidence():
+  for id in symb_confidence:
+    if max(symb_confidence[id].keys()) < 0.5:
+      return True
+  return False
+
 
 def detect():
   results = {}
@@ -299,11 +339,15 @@ def detect():
         YOLO_BATCH_SIZE
   )
   try:
+    # if (run):
     print('Image recognition started!')
     prev_dir, prev_x, prev_y = -1, -1, -1
     direction, x_coordinate , y_coordinate = -1, -1, -1
-    while len(results) < 5:
+    while len(results) < 5 or (confidenceBool and checkConfidence()):
+    # while len(results) < 5:
       direction, x_coordinate , y_coordinate = getPosition()
+      if direction == -1:
+        break
       if direction != prev_dir or x_coordinate != prev_x or y_coordinate != prev_y:
         time.sleep(0.05)
         frame = retrieveImg()
@@ -356,6 +400,10 @@ def detect():
               sendAndroidString(results)
       prev_dir, prev_x, prev_y = direction, x_coordinate, y_coordinate
       # print(results)
+
+    # else:
+    #   raise Exception
+  
   except KeyboardInterrupt:
         print('Image recognition ended')
     
@@ -378,12 +426,15 @@ def detect():
   android_full_string = sendAndroidString(results)
   print('IMG - Sent to Android:' + android_full_string)
 
-  img_stitch(SAVED_IMAGE_PATH)
   ir_socket.send("STOP".encode(FORMAT))
-  # ir_socket.send("AR-STOP".encode(FORMAT))
+  # ir_socket.send("AR-T".encode(FORMAT))
 
-  result_list = list(images.values())
-  showImages(result_list)
+  showFinalImage(SAVED_IMAGE_PATH)
 
+  # result_list = list(images.values())
+  # showImages(result_list)
+
+  return
 if __name__ == "__main__":
   detect()
+  print("Image Recognition Stopped")
