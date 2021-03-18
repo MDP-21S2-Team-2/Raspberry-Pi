@@ -3,6 +3,10 @@ from cv2 import cv2
 import numpy as np
 import imutils
 import random
+import time
+
+from datetime import datetime as dt
+import os
 
 #Setup socket for sending of string and receiving of coordinate
 import socket
@@ -34,7 +38,13 @@ def sendAndroidString(resultList):
 
 
 #Setup path for image recognition
-SAVED_IMAGE_PATH = 'D:/Tai_lieu/Academic/Year_3_Semester_2/CZ3004_Multidisciplinary_Design_Project/Image_Recognition_Dependencies/saved_images/'
+SAVED_IMAGE_PATH = 'D:/Tai_lieu/Academic/Year_3_Semester_2/CZ3004_Multidisciplinary_Design_Project/Image_Recognition_Dependencies/saved_images/' + dt.now().strftime("%d-%m-%Y_%H-%M") + "/"
+# create folder for image path
+try:
+  os.mkdir(SAVED_IMAGE_PATH)
+except OSError:
+  print("Creation of the directory %s failed" % SAVED_IMAGE_PATH)
+
 SOURCE_PATH = 'D:/Tai_lieu/Academic/Year_3_Semester_2/CZ3004_Multidisciplinary_Design_Project/Image_Recognition_Dependencies/darknet/'
 WEIGHT_FILE_PATH = SOURCE_PATH + 'backup/yolo-obj_last.weights'
 CONFIG_FILE_PATH = SOURCE_PATH + 'cfg/yolo-obj.cfg'
@@ -71,7 +81,7 @@ def saveImage(frame, id):
   frame = imutils.resize(frame, width=640, height=480)
         
   # Saves images to local storage
-  cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + " try2 "+ '.jpeg', frame)
+  cv2.imwrite(SAVED_IMAGE_PATH + 'result_' + str(id) + "_" + dt.now().strftime("%H-%M-%S") + '.jpeg', frame)
         
 def showImages(frame_list):
   for index, frame in enumerate(frame_list):
@@ -121,6 +131,7 @@ def conf_init():
     confidence[i]= i * 2
     confidence[1.0-(i)]= i * 2
   confidence[0.0] = 0.1
+  confidence[4.5] = 0.9
   confidence[1.0] = 1.0
   confidence[0.01] = 0.0
   confidence = dict(sorted(confidence.items()))
@@ -153,7 +164,7 @@ def find_nearest(array, value):
 def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
   if (distance >= 95.5 ):
     distance -= 95.5
-    conf = distance / 68.8
+    conf = distance / 23.75
     conf = round(conf,1)
     if (conf > 0.5):
       conf = 1.0
@@ -182,6 +193,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 56
     conf = distance / 11.7 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 4.5
     img_cor = (cur_x_cor + (4*x_dir) , cur_y_cor + (4*y_dir))
 
     CONST = np.array([69.1,163.6,258.5,352.45,446.95])
@@ -206,6 +219,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 39
     conf = distance / 6.5 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 4.5
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
 
     CONST = np.array([59.74,123.7,189.05,252.7,314.8,378.35,442.31])
@@ -265,6 +280,14 @@ def dist_est(box_len,img_symb,dir,x,y,x_box):
 
   print(symb_confidence)
 
+def img_stitch(path):
+  imgs = []
+  for i in os.listdir(path):
+    img = cv2.imread(path + i)
+    # print(img)
+    imgs.append(img)
+  im_f = cv2.hconcat([imgs[0], imgs[1], imgs[2], imgs[3], imgs[4]])
+  cv2.imwrite(path + 'fin.jpg', im_f)
 
 def detect():
   results = {}
@@ -279,9 +302,10 @@ def detect():
     print('Image recognition started!')
     prev_dir, prev_x, prev_y = -1, -1, -1
     direction, x_coordinate , y_coordinate = -1, -1, -1
-    while True:
+    while len(results) < 5:
       direction, x_coordinate , y_coordinate = getPosition()
       if direction != prev_dir or x_coordinate != prev_x or y_coordinate != prev_y:
+        time.sleep(0.05)
         frame = retrieveImg()
         image, detections = imageDetection(frame, network, class_names, class_colors, THRESH)
         #structure: list
@@ -293,7 +317,7 @@ def detect():
           bbox = i[2]
 
           #Prototype: Skip side images using condition on width / height ratio
-          if float(bbox[2]) / float(bbox[3]) <= 1.0 / 4.0:
+          if float(bbox[2]) / float(bbox[3]) < 0.6:
             continue                  
 
           print('ID detected: ' + id, ', confidence: ' + confidence)
@@ -304,7 +328,8 @@ def detect():
             if id in results:
               print('ID has been detected before')
               # if float(confidence) > float(results[id][1]):
-              if float(confidence) > float(results[id][0][1]) and max(symb_confidence[id].keys()) >= max(results[id][1].keys()):
+              #if float(confidence) > float(results[id][0][1]) and max(symb_confidence[id].keys()) >= max(results[id][1].keys()):
+              if float(confidence) > 98.0 and max(symb_confidence[id].keys()) >= max(results[id][1].keys()):
                 print('Higher confidence. Replacing existing image.')
                 # Removes existing result from dict
                 del results[id]
@@ -353,8 +378,9 @@ def detect():
   android_full_string = sendAndroidString(results)
   print('IMG - Sent to Android:' + android_full_string)
 
-  ir_socket.send("AL-STOP".encode(FORMAT))
-  ir_socket.send("AR-STOP".encode(FORMAT))
+  img_stitch(SAVED_IMAGE_PATH)
+  ir_socket.send("STOP".encode(FORMAT))
+  # ir_socket.send("AR-STOP".encode(FORMAT))
 
   result_list = list(images.values())
   showImages(result_list)
