@@ -49,11 +49,9 @@ def find_nearest(array, value):
     return idx
 
 def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
-
-
-  if (distance >= 215 ):
-    distance -= 215
-    conf = distance / 155 
+  if (distance >= 95.5 ):
+    distance -= 95.5
+    conf = distance / 23.75 #changed from 68.5 to 55
     conf = round(conf,1)
     if (conf > 0.5):
       conf = 1.0
@@ -66,9 +64,9 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
 
-  elif (distance >= 152.5 and distance < 215):
-    distance -= 152.5
-    conf = distance / 63.5 
+  elif (distance >= 67.7 and distance < 95.5):
+    distance -= 67.7
+    conf = distance / 27.8 
     conf = round(conf,1)
     img_cor = (cur_x_cor + (3*x_dir) , cur_y_cor + (3*y_dir))
 
@@ -78,9 +76,9 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,1)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
-  elif (distance >= 126 and distance < 152.5):
-    distance -= 126
-    conf = distance / 26.5 
+  elif (distance >= 56 and distance < 67.7):
+    distance -= 56
+    conf = distance / 11.7 
     conf = round(conf,1)
     if conf==0.5:
       conf = 4.5
@@ -92,9 +90,9 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
-  elif (distance >= 102.5 and distance < 126):
-    distance -= 102.5
-    conf = distance / 23.5 
+  elif (distance >= 45.5 and distance < 56):
+    distance -= 45.5
+    conf = distance / 10.5 
     conf = round(conf,1)
     if conf==0.5:
       conf = 4.5
@@ -106,9 +104,9 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     (x_off,y_off) = get_offset(x_dir,y_dir,idx,2)
     img_cor = (img_cor[0] + x_off, img_cor[1] + y_off)
 
-  elif (distance >= 88 and distance < 102.5):
-    distance -= 88
-    conf = distance / 14.5 
+  elif (distance >= 39 and distance < 45.5):
+    distance -= 39
+    conf = distance / 6.5 
     conf = round(conf,1)
     if conf==0.5:
       conf = 4.5
@@ -124,7 +122,7 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     print("Distance: " + str(distance) + ". Image too far.")
     conf = 0.01
     img_cor = (cur_x_cor + (6*x_dir) , cur_y_cor + (6*y_dir))
-
+    
   if (img_cor[0]<0):
     img_cor = (0,img_cor[1])
   elif (img_cor[0]>14):
