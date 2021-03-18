@@ -68,6 +68,8 @@ def coordinates(distance,x_dir,y_dir,cur_x_cor,cur_y_cor,x_box):
     distance -= 67.7
     conf = distance / 27.8 
     conf = round(conf,1)
+    if conf==0.5:
+      conf = 4.5
     img_cor = (cur_x_cor + (3*x_dir) , cur_y_cor + (3*y_dir))
 
     CONST = np.array([141.45,263.15,384.85])
